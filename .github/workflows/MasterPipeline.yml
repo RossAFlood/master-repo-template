@@ -95,7 +95,7 @@ jobs:
 
       - name: Run terraform fmt check
         run: |
-          fmtstatus = sh "terraform fmt -check -diff -recursive ./IaC/terraform"
+          fmtstatus=sh "terraform fmt -check -diff -recursive ./IaC/terraform"
           if (fmtstatus == 0){
           echo "All Correct"
           }else{
