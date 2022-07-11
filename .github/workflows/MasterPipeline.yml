@@ -94,7 +94,7 @@ jobs:
           terraform_version: 1.0.9
 
       - name: Run terraform fmt check
-        run: terraform fmt -check -diff -recursive ./terraform
+        run: terraform fmt -check -diff -recursive ./IaC/terraform
 
   plan:
     name: Terraform Plan
@@ -111,12 +111,10 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      - name: Log in with Azure
+        uses: azure/login@v1
         with:
-          aws-region: us-east-1
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          creds: '${{ secrets.AZURE_CREDENTIALS_SP_DEV }}'
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
