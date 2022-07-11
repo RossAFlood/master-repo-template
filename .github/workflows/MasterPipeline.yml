@@ -210,21 +210,21 @@ jobs:
           creds: '${{ secrets.AZURE_CREDENTIALS_SP_DEV }}'
           
         # Push to dev Azure web apps  
-      - name: Deploy Portal.Server to Container 
-        if: ${{ env.config-level != 'Release' }}
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.server-azure-app-name }} 
-          publish-profile: ${{ secrets.SERVER_PORTAL_PUBLISH_PROFILE  }} 
-          package: publish/Portal.Server
+      # - name: Deploy Portal.Server to Container 
+      #   if: ${{ env.config-level != 'Release' }}
+      #   uses: azure/webapps-deploy@v2
+      #   with:
+      #     app-name: ${{ env.server-azure-app-name }} 
+      #     publish-profile: ${{ secrets.SERVER_PORTAL_PUBLISH_PROFILE  }} 
+      #     package: publish/Portal.Server
           
-      - name: Deploy Portal.Staff to Container 
-        if: ${{ env.config-level != 'Release' }}
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.staff-azure-app-name }}
-          publish-profile: ${{ secrets.STAFF_PORTAL_PUBLISH_PROFILE  }} 
-          package: publish/Portal.Staff
+      # - name: Deploy Portal.Staff to Container 
+      #   if: ${{ env.config-level != 'Release' }}
+      #   uses: azure/webapps-deploy@v2
+      #   with:
+      #     app-name: ${{ env.staff-azure-app-name }}
+      #     publish-profile: ${{ secrets.STAFF_PORTAL_PUBLISH_PROFILE  }} 
+      #     package: publish/Portal.Staff
     
   qa:
     needs: dev
