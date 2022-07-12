@@ -1,0 +1,45 @@
+name: Builds Project Master
+
+# Controls when the workflow will run
+on:
+  pull_request:
+    branches:
+      - dev
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs: 
+      debug:
+        description: 'envoke debug mode'
+        required: true
+        default: 'false'
+env:
+  project_name: eba-dflt
+  location: eastus
+  service_principle : $project_name-sp
+  keyvault : kv-$project_name-$location
+
+jobs:
+
+  build: 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2 
+      - name: Log in with Azure
+        uses: azure/login@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.9
+
+      - name: Run terraform fmt check
+        run: |
+          fmtstatus=sh "terraform fmt -check -diff -recursive ./IaC/terraform"
+          if (fmtstatus == 0){
+          echo "All Correct"
+          }else{
+            echo "Changes will be applied!"
+          }
