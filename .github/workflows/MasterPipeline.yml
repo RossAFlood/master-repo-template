@@ -19,14 +19,14 @@ env:
   location: eastus
   service_principle : $project_name-sp
   keyvault : kv-$project_name-$location
-  rg_dev_win : dev-${{ inputs.project_name }}-${{ inputs.location}}-win
-  rg_dev_lin : dev-${{ inputs.project_name }}-${{ inputs.location}}-linux
-  rg_qa_win : qa-${{ inputs.project_name }}-${{ inputs.location}}-win
-  rg_qa_lin : qa-${{ inputs.project_name }}-${{ inputs.location}}-linux
-  rg_uat_win : uat-${{ inputs.project_name }}-${{ inputs.location}}-win
-  rg_uat_lin : uat-${{ inputs.project_name }}-${{ inputs.location}}-linux
-  rg_prod_win : prod-${{ inputs.project_name }}-${{ inputs.location}}-win
-  rg_prod_lin : prod-${{ inputs.project_name }}-${{ inputs.location}}-linux  
+  rg_dev_win : dev-$project_name-$location-win
+  rg_dev_lin : dev-$project_name-$location-linux
+  rg_qa_win : qa-$project_name-$location-win
+  rg_qa_lin : qa-$project_name-$location-linux
+  rg_uat_win : uat-$project_name-$location-win
+  rg_uat_lin : uat-$project_name-$location-linux
+  rg_prod_win : prod-$project_name-$location-win
+  rg_prod_lin : prod-$project_name-$location-linux  
   server-azure-app-name: eba-server-portal-dev
   staff-azure-app-name: eba-staff-portal-dev
   third-party-nuget-feed: https://pkgs.dev.azure.com/eaglebrookadvisors/_packaging/third.party/nuget/v3/index.json
@@ -94,7 +94,13 @@ jobs:
           terraform_version: 1.0.9
 
       - name: Run terraform fmt check
-        run: terraform fmt -check -diff -recursive ./IaC/terraform
+        run: |
+          fmtstatus=sh "terraform fmt -check -diff -recursive ./IaC/terraform"
+          if (fmtstatus == 0){
+          echo "All Correct"
+          }else{
+            echo "Changes will be applied!"
+          }
 
   plan:
     name: Terraform Plan
@@ -114,7 +120,7 @@ jobs:
       - name: Log in with Azure
         uses: azure/login@v1
         with:
-          creds: '${{ secrets.AZURE_CREDENTIALS_SP_DEV }}'
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
