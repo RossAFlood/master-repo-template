@@ -34,10 +34,11 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
         with:
-          terraform_version: 1.0.9
+          terraform_version: 1.0.10
 
       - name: Run terraform fmt check
         run: |
+          ls
           fmtstatus=sh "terraform fmt -check -diff -recursive ./IaC/terraform"
           if (fmtstatus == 0){
           echo "All Correct"
