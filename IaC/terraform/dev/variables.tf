@@ -29,9 +29,7 @@ variable "location" {
 variable "resource_tags" {
   description = "Tags to set for all resources"
   type        = map(string)
-  default = {
-    project     = "my-project",
-    environment = "dev"
+  default     = {
   }
 }
 #############################################################################
@@ -56,19 +54,19 @@ variable "replicationType" {
 #############################################################################
 
 variable "asp_tier" {
-  type        = string
-  description = "Tier for App Service Plan (Standard, PremiumV2)"
-  default     = "Standard"
+    type = string
+    description = "Tier for App Service Plan (Standard, PremiumV2)"
+    default = "Standard"
 }
 
 variable "asp_size" {
-  type        = string
-  description = "Size for App Service Plan (S2, P1v2)"
-  default     = "S1"
+    type = string
+    description = "Size for App Service Plan (S2, P1v2)"
+    default = "S1"
 }
 
 variable "capacity" {
-  type        = string
+  type = string
   description = "Number of instances for App Service Plan"
-  default     = "1"
+  default = "1"
 }
