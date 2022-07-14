@@ -33,12 +33,7 @@ variable "replicationType" {
 
 variable "location" {
   type    = string
-  default = "eastus"
-}
-
-variable "naming_prefix" {
-  type    = string
-  default = "adolabs"
+  default = "east us"
 }
 
 variable "asp_tier" {

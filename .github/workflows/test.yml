@@ -58,7 +58,7 @@ jobs:
   Plan:
       runs-on: ubuntu-latest
       env:
-          TF_VAR_location: eastus
+          TF_VAR_location: east us
       strategy:
         fail-fast: false
         matrix: 
