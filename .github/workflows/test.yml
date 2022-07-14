@@ -36,9 +36,11 @@ jobs:
         with:
           terraform_version: 1.0.10
 
-      - name: Run terraform fmt check
+      - name: Format Terraform
         run: |
+          echo Current directory: 
           ls
+
           fmtstatus=sh "terraform fmt -check -diff -recursive ./IaC/terraform"
           if (fmtstatus == 0){
           echo "All Correct"
