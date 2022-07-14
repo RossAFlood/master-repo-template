@@ -40,10 +40,10 @@ jobs:
 
       - name: Format Terraform
         run: |
-          cd IaC/dev
           echo Current directory: 
           ls
-
+          cd IaC
+          ls
           fmtstatus=sh "terraform fmt -check -diff"
           if (fmtstatus == 0){
             echo "All Correct"
