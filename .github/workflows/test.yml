@@ -11,7 +11,7 @@ on:
     inputs: 
       debug:
         type: boolean
-        description: 'envoke debug mode'
+        description: 'debug'
         required: true
         default: false
 env:
