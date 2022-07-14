@@ -27,7 +27,7 @@ env:
 
 jobs:
 
-  build: 
+  lint: 
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2 
@@ -54,17 +54,45 @@ jobs:
           echo Current directory: 
           ls
           terraform init -backend-config="storage_account_name=stebadevops001" -backend-config="container_name=tf-container" -backend-config="resource_group_name=devops-tools"
+  
+  Plan:
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false
+        matrix: 
+          path:
+            - dev
+            # - qa
+            # - uat
+            # - prod
 
+      steps:
+      - uses: actions/checkout@v2 
+      - name: Log in with Azure
+        uses: azure/login@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS }}'
 
-      - name: Format Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.9
+
+      - name: Terraform Init
+        id: init
+        env:
+          TF_RESOURCE_GROUP: ${{ secrets.TF_RESOURCE_GROUP }}
+          TF_STORAGE_ACCOUNT: ${{ secrets.TF_STORAGE_ACCOUNT }}
+          TF_CONTAINER_NAME: ${{ secrets.TF_CONTAINER_NAME }}
         run: |
+          cd IaC/terraform/dev
           echo Current directory: 
           ls
-          cd IaC/terraform/dev
-          
-          terraform fmt -check -diff
-          # if (fmtstatus == 0){
-          #   echo "All Correct"
-          # }else{
-          #   echo "Changes will be applied!"
-          # }
+          terraform init -backend-config="storage_account_name=stebadevops001" -backend-config="container_name=tf-container" -backend-config="resource_group_name=devops-tools"
+
+      - name: Terraform Plan
+        id: plan
+        continue-on-error: true
+        run: |
+          cd IaC/terraform/${{ matrix.path }}
+          terraform plan -no-color -input=false
