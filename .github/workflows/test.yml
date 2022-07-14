@@ -81,17 +81,19 @@ jobs:
       - name: Terraform Init
         id: init
         env:
-          TF_RESOURCE_GROUP: ${{ secrets.TF_RESOURCE_GROUP }}
-          TF_STORAGE_ACCOUNT: ${{ secrets.TF_STORAGE_ACCOUNT }}
-          TF_CONTAINER_NAME: ${{ secrets.TF_CONTAINER_NAME }}
+          RESOURCE_GROUP: ${{ secrets.TF_RESOURCE_GROUP }}
+          STORAGE_ACCOUNT: ${{ secrets.TF_STORAGE_ACCOUNT }}
+          CONTAINER_NAME: ${{ secrets.TF_CONTAINER_NAME }}
         run: |
           cd IaC/terraform/dev
           echo Current directory: 
           ls
-          terraform init -backend-config="storage_account_name=stebadevops001" -backend-config="container_name=tf-container" -backend-config="resource_group_name=devops-tools"
+          terraform init -backend-config="storage_account_name=$STORAGE_ACCOUNT" -backend-config="container_name=$CONTAINER_NAME" -backend-config="resource_group_name=$RESOURCE_GROUP"
 
       - name: Terraform Plan
         id: plan
+        env:
+          TF_VAR_location: eastus
         continue-on-error: true
         run: |
           cd IaC/terraform/${{ matrix.path }}
