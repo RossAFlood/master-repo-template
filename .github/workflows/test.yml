@@ -59,6 +59,7 @@ jobs:
       runs-on: ubuntu-latest
       env:
           TF_VAR_location: east us
+          TF_VAR_storage_account_name: testsa
       strategy:
         fail-fast: false
         matrix: 
