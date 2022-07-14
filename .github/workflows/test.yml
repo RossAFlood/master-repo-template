@@ -39,11 +39,11 @@ jobs:
 
       - name: Format Terraform
         run: |
-          #cd IaC/dev"
+          cd IaC/dev"
           echo Current directory: 
           ls
 
-          fmtstatus=sh "terraform fmt -check -diff -recursive ./IaC/dev"
+          fmtstatus=sh "terraform fmt -check -diff"
           if (fmtstatus == 0){
           echo "All Correct"
           }else{
