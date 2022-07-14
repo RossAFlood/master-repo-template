@@ -42,9 +42,9 @@ jobs:
         run: |
           echo Current directory: 
           ls
-          cd IaC
-          ls
-          fmtstatus=sh "terraform fmt -check -diff"
+          #cd IaC
+          #ls
+          fmtstatus=sh "terraform fmt -check -diff -recursive  ./IaC/terraform/dev""
           if (fmtstatus == 0){
             echo "All Correct"
           }else{
