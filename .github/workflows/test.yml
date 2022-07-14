@@ -59,7 +59,7 @@ jobs:
       runs-on: ubuntu-latest
       env:
           TF_VAR_location: east us
-          TF_VAR_storage_account_name: testsa
+          TF_VAR_storage_account_name: ebadflt001
       strategy:
         fail-fast: false
         matrix: 
@@ -93,12 +93,25 @@ jobs:
           ls
           terraform init -backend-config="storage_account_name=$STORAGE_ACCOUNT" -backend-config="container_name=$CONTAINER_NAME" -backend-config="resource_group_name=$RESOURCE_GROUP"
 
-      - name: Terraform Plan
+      - name: Terraform Plan 
         id: plan
         continue-on-error: true
         run: |
-          cd IaC/terraform/${{ matrix.path }}
-          terraform plan -no-color -input=false
+          cd terraform/${{ matrix.path }}
+          terraform plan -input=false -no-color -out=tfplan \
+          && terraform show -no-color tfplan          
+
+      - name: Reformat Plan
+        run: |
+          echo '${{ steps.plan.outputs.stdout || steps.plan.outputs.stderr }}' \
+          | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt          
+
+      - name: Put Plan in Env Var
+        run: |
+          PLAN=$(cat plan.txt)
+          echo "PLAN<<EOF" >> $GITHUB_ENV
+          echo "$PLAN" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV          
 
       - name: Post Plan to GitHub PR
         uses: mshick/add-pr-comment@v1
@@ -108,6 +121,6 @@ jobs:
           repo-token-user-login: 'github-actions[bot]'
           message: |
             ## ${{ matrix.path }} plan
-            ```
-            ${{ steps.plan.outputs.stdout || steps.plan.outputs.stderr }}
+            ```diff
+            ${{ env.PLAN }}
             ```            
