@@ -62,7 +62,7 @@ jobs:
           ls
           cd IaC/terraform/dev
           
-          fmtstatus=sh "terraform fmt -check -diff"
+          fmtstatus=$(terraform fmt -check -diff)
           if (fmtstatus == 0){
             echo "All Correct"
           }else{
