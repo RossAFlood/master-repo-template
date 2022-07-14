@@ -3,7 +3,7 @@
 locals {
   required_tags = {
     project     = var.project_name,
-    environment = dev
+    environment = "dev"
     location    = var.location
   }
   tags        = merge(var.resource_tags, local.required_tags)
