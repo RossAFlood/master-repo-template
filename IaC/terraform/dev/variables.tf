@@ -1,3 +1,20 @@
+
+#############################################################################
+# PORVIDER
+#############################################################################
+
+variable "agent_client_id" {}
+
+variable "agent_client_secret" {}
+
+variable "subscription_id" {}
+variable "tenant_id" {}
+
+#############################################################################
+# Resource group
+#############################################################################
+
+
 variable "resource_group" {
   description = "The type of replication"
   type        = string
