@@ -10,9 +10,10 @@ on:
   workflow_dispatch:
     inputs: 
       debug:
+        type: boolean
         description: 'envoke debug mode'
         required: true
-        default: 'false'
+        default: false
 env:
   project_name: eba-dflt
   location: eastus
@@ -38,10 +39,11 @@ jobs:
 
       - name: Format Terraform
         run: |
+          #cd IaC/dev"
           echo Current directory: 
           ls
 
-          fmtstatus=sh "terraform fmt -check -diff -recursive ./IaC/terraform"
+          fmtstatus=sh "terraform fmt -check -diff -recursive ./IaC/dev"
           if (fmtstatus == 0){
           echo "All Correct"
           }else{
