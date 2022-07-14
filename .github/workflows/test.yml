@@ -57,6 +57,8 @@ jobs:
   
   Plan:
       runs-on: ubuntu-latest
+      env:
+          TF_VAR_location: eastus
       strategy:
         fail-fast: false
         matrix: 
@@ -92,8 +94,6 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        env:
-          TF_VAR_location: eastus
         continue-on-error: true
         run: |
           cd IaC/terraform/${{ matrix.path }}
