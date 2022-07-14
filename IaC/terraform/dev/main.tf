@@ -3,7 +3,7 @@
 #Data section
 data "azurerm_resource_group" "ResGroup" {
   name = "var.resource_group"
-  location = "var.location"
+
 }
 
 #Resource section
