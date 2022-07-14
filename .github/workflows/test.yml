@@ -62,9 +62,9 @@ jobs:
           ls
           cd IaC/terraform/dev
           
-          fmtstatus=$(terraform fmt -check -diff)
-          if (fmtstatus == 0){
-            echo "All Correct"
-          }else{
-            echo "Changes will be applied!"
-          }
+          terraform fmt -check -diff
+          # if (fmtstatus == 0){
+          #   echo "All Correct"
+          # }else{
+          #   echo "Changes will be applied!"
+          # }
