@@ -56,7 +56,7 @@ jobs:
 #############################################################################
 
   build_artifact:
-      uses: RossAFlood/INSERT_REPO_NAME/.github/workflows/build-artifact.yml@main
+      uses: RossAFlood/INSERT_REPO_NAME/.github/workflows/sub_flows/build-artifact.yml@main
       with:
         artifact-name:  ${{ web_app_1 }} #put in the functions or web app names you want to publish
         path: ${{ web_app_1_artifact_path }} # and path to it
@@ -67,7 +67,7 @@ jobs:
 # TERRAFORM PLAN
 #############################################################################
   terraform_plan:
-      uses: RossAFlood/INSERT_REPO_NAME/.github/workflows/terrafrom-plan.yml@main
+      uses: RossAFlood/INSERT_REPO_NAME/.github/workflows/sub_flows/terrafrom-plan.yml@main
       with:
         artifact-name:  ${{ web_app_1 }} #put in the functions or web app names you want to publish
         path: ${{ web_app_1_artifact_path }} # and path to it
