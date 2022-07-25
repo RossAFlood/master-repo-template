@@ -16,9 +16,9 @@ on:
         value: ${{ jobs.build.outputs.success }}
         
 env:
-  third-party-nuget-feed: https://pkgs.dev.azure.com/${{ env.repo_owner }}/_packaging/third.party/nuget/v3/index.json
-  vendor-test-nuget-feed: https://pkgs.dev.azure.com/${{ env.repo_owner }}/EagleOne/_packaging/vendor-test-feed/nuget/v3/index.json
-  github-nuget-feed: https://nuget.pkg.github.com/${{ env.repo_owner }}/index.json
+  third-party-nuget-feed: https://pkgs.dev.azure.com/RossAFlood/_packaging/third.party/nuget/v3/index.json
+  vendor-test-nuget-feed: https://pkgs.dev.azure.com/RossAFlood/EagleOne/_packaging/vendor-test-feed/nuget/v3/index.json
+  github-nuget-feed: https://nuget.pkg.github.com/RossAFlood/index.json
   dotnet-version: 6.0.x
   config-level: Debug
 
