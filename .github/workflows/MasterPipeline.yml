@@ -84,8 +84,7 @@ jobs:
   dev:
     name: Deploy Dev artifacts to azure
     needs: [build_artifact, terraform_plan]
-    env:
-      environment: dev
+    environment: dev
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -129,8 +128,7 @@ jobs:
   qa:
     name: Deploy QA artifacts to azure
     needs: [dev, terraform_plan]
-    env:
-      environment: qa
+    environment: qa
     runs-on: ubuntu-latest
 
 #############################################################################
@@ -139,8 +137,7 @@ jobs:
   uat:
     name: Deploy UAT artifacts to azure
     needs: [qa, terraform_plan]
-    env:
-      environment: uat
+    environment: uat
     runs-on: ubuntu-latest
 #############################################################################
 # PROD DEPLOY
@@ -148,8 +145,7 @@ jobs:
   prod:
     name: Deploy PROD artifacts to azure
     needs: [uat, terraform_plan]
-    env:
-      environment: prod
+    environment: prod
     runs-on: ubuntu-latest
     
 #############################################################################
