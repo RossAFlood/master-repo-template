@@ -14,6 +14,10 @@ on:
         description: 'envoke debug mode'
         required: true
         default: false
+      repo_owner:
+        required: true
+        description: owner of repo
+        default: "EaglebrookAdvisors"
 
 env:
   project_name: eba-dflt
@@ -24,9 +28,9 @@ env:
   ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID_NP }}
-  third-party-nuget-feed: https://pkgs.dev.azure.com/eaglebrookadvisors/_packaging/third.party/nuget/v3/index.json
-  vendor-test-nuget-feed: https://pkgs.dev.azure.com/eaglebrookadvisors/EagleOne/_packaging/vendor-test-feed/nuget/v3/index.json
-  github-nuget-feed: https://nuget.pkg.github.com/EaglebrookAdvisors/index.json
+  third-party-nuget-feed: https://pkgs.dev.azure.com/${{ env.repo_owner }}/_packaging/third.party/nuget/v3/index.json
+  vendor-test-nuget-feed: https://pkgs.dev.azure.com/${{ env.repo_owner }}/EagleOne/_packaging/vendor-test-feed/nuget/v3/index.json
+  github-nuget-feed: https://nuget.pkg.github.com/${{ env.repo_owner }}/index.json
   dotnet-version: 6.0.x
   config-level: Debug
   web_app_1: staff
@@ -45,7 +49,7 @@ jobs:
     steps:
       - name: turning on debug
         run: |
-          gh secret set ACTIONS_RUNNER_DEBUG  --body "true" --repo "EaglebrookAdvisors/${{ inputs.project_name }}"
+          gh secret set ACTIONS_RUNNER_DEBUG  --body "true" --repo "${{ env.repo_owner }}/${{ inputs.project_name }}"
 
 #############################################################################
 # Builds
@@ -54,7 +58,7 @@ jobs:
 #############################################################################
 
   build_artifact:
-      uses: EaglebrookAdvisors/${{ env.project_name }}/.github/workflows/build-artifact.yml@main
+      uses: ${{ env.repo_owner }}/${{ env.project_name }}/.github/workflows/build-artifact.yml@main
       with:
         artifact-name:  ${{ web_app_1 }} #put in the functions or web app names you want to publish
         path: ${{ web_app_1_artifact_path }} # and path to it
@@ -65,7 +69,7 @@ jobs:
 # TERRAFORM PLAN
 #############################################################################
   terraform_plan:
-      uses: EaglebrookAdvisors/${{ env.project_name }}/.github/workflows/terrafrom-plan.yml@main
+      uses: ${{ env.repo_owner }}/${{ env.project_name }}/.github/workflows/terrafrom-plan.yml@main
       with:
         artifact-name:  ${{ web_app_1 }} #put in the functions or web app names you want to publish
         path: ${{ web_app_1_artifact_path }} # and path to it
@@ -159,4 +163,4 @@ jobs:
     steps:
       - name: Turning off debug
         run: |
-          gh secret set ACTIONS_RUNNER_DEBUG  --body "false" --repo "EaglebrookAdvisors/${{ inputs.project_name }}"
+          gh secret set ACTIONS_RUNNER_DEBUG  --body "false" --repo "${{ env.repo_owner }}/${{ inputs.project_name }}"
