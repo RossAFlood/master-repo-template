@@ -14,10 +14,7 @@ on:
         description: 'envoke debug mode'
         required: true
         default: false
-      repo_owner:
-        required: true
-        description: owner of repo
-        default: "EaglebrookAdvisors"
+
 
 env:
   project_name: eba-dflt
@@ -37,7 +34,7 @@ env:
   web_app_1_artifact_path: 'Code/location/' # ie ./EBA.Orders.EventFunnel
   function_1: function1
   function_1_artifact_path: 'Code/location/' # ie ./EBA.Orders.EventFunnel
-  repo_owner: ${{ repo_owner }}
+
 
 
 jobs:
@@ -59,7 +56,7 @@ jobs:
 #############################################################################
 
   build_artifact:
-      uses: RossAFlood/${{ env.project_name }}/.github/workflows/build-artifact.yml@main
+      uses: RossAFlood/INSERT_REPO_NAME/.github/workflows/build-artifact.yml@main
       with:
         artifact-name:  ${{ web_app_1 }} #put in the functions or web app names you want to publish
         path: ${{ web_app_1_artifact_path }} # and path to it
@@ -70,7 +67,7 @@ jobs:
 # TERRAFORM PLAN
 #############################################################################
   terraform_plan:
-      uses: RossAFlood/${{ env.project_name }}/.github/workflows/terrafrom-plan.yml@main
+      uses: RossAFlood/INSERT_REPO_NAME/.github/workflows/terrafrom-plan.yml@main
       with:
         artifact-name:  ${{ web_app_1 }} #put in the functions or web app names you want to publish
         path: ${{ web_app_1_artifact_path }} # and path to it
