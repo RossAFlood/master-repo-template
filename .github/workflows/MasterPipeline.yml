@@ -37,6 +37,7 @@ env:
   web_app_1_artifact_path: 'Code/location/' # ie ./EBA.Orders.EventFunnel
   function_1: function1
   function_1_artifact_path: 'Code/location/' # ie ./EBA.Orders.EventFunnel
+  repo_owner: ${{ repo_owner }}
 
 
 jobs:
