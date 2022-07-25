@@ -118,7 +118,7 @@ jobs:
         with:
           allow-repeats: true
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          repo-token-user-login: 'github-actions[bot]'
+          repo-token-user-login: 'gh_service_account'
           message: |
             ## ${{ matrix.path }} plan
             ```diff

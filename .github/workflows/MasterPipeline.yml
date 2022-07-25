@@ -16,294 +16,146 @@ on:
 
 env:
   project_name: eba-dflt
-  location: eastus
+  location: eastus2
   service_principle : $project_name-sp
   keyvault : kv-$project_name-$location
-  rg_dev_win : dev-$project_name-$location-win
-  rg_dev_lin : dev-$project_name-$location-linux
-  rg_qa_win : qa-$project_name-$location-win
-  rg_qa_lin : qa-$project_name-$location-linux
-  rg_uat_win : uat-$project_name-$location-win
-  rg_uat_lin : uat-$project_name-$location-linux
-  rg_prod_win : prod-$project_name-$location-win
-  rg_prod_lin : prod-$project_name-$location-linux  
-  server-azure-app-name: eba-server-portal-dev
-  staff-azure-app-name: eba-staff-portal-dev
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID_NP }}
   third-party-nuget-feed: https://pkgs.dev.azure.com/eaglebrookadvisors/_packaging/third.party/nuget/v3/index.json
   vendor-test-nuget-feed: https://pkgs.dev.azure.com/eaglebrookadvisors/EagleOne/_packaging/vendor-test-feed/nuget/v3/index.json
   github-nuget-feed: https://nuget.pkg.github.com/EaglebrookAdvisors/index.json
   dotnet-version: 6.0.x
   config-level: Debug
+  web_app_1: staff
+  web_app_1_artifact_path: 'Code/location/' # ie ./EBA.Orders.EventFunnel
+  function_1: function1
+  function_1_artifact_path: 'Code/location/' # ie ./EBA.Orders.EventFunnel
+
 
 jobs:
-
-  build: 
+#############################################################################
+# Debug On
+#############################################################################
+  debug_on:
+    if: env.debug  == true
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2 
-
-    # build application and store artifact
-        
-      - name: Setup .NET 
-        id: setup-net
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: ${{ env.dotnet-version }}
-          
-        # Authenticate with Eaglebrook NuGet Feed
-      - name: Authenticate Nuget Packages
-        id: auth-packages
-        run: >
-          dotnet nuget add source --username build_agent --password "${{ secrets.AZURE_NUGET_TOKEN }}" 
-          --store-password-in-clear-text --name third.party "${{ env.third-party-nuget-feed }}";   
-          dotnet nuget add source --username build_agent --password "${{ secrets.AZURE_NUGET_TOKEN }}" 
-          --store-password-in-clear-text --name vendor-test-feed "${{ env.vendor-test-nuget-feed }}"; 
-          dotnet nuget add source --username ${{secrets.EBA_NUGET_USERNAME}} --password "${{ secrets.EBA_NUGET_PAT }}" 
-          --store-password-in-clear-text --name github "${{ env.github-nuget-feed }}"; 
-
-      - name: Restore Dependencies
-        run: dotnet restore
-        
-      - name: Build Solution
-        id: build
-        run: dotnet build --no-restore -c ${{ env.config-level }}
-        
-      - name: Run Tests
-        continue-on-error: true
-        id: test
-        run: dotnet test --no-build
-        
-        # Compile app, pull dependencies, and publish to a folder 
-      - name: Publish Web Applications
-        id: publish
-        run: > 
-          find . -maxdepth 1 -name "Portal*" -printf "%P\n" | while read app; 
-          do dotnet publish "$app/$app.csproj" -o "./publish/$app" -c ${{ env.config-level }} --no-restore; 
-          done
-
-  lint:
-    name: Lint Terraform
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 1.0.9
-
-      - name: Run terraform fmt check
+      - name: turning on debug
         run: |
-          fmtstatus=sh "terraform fmt -check -diff -recursive ./IaC/terraform"
-          if (fmtstatus == 0){
-          echo "All Correct"
-          }else{
-            echo "Changes will be applied!"
-          }
+          gh secret set ACTIONS_RUNNER_DEBUG  --body "true" --repo "RossAFlood/${{ inputs.project_name }}"
 
-  plan:
-    name: Terraform Plan
-    runs-on: ubuntu-20.04
-    strategy:
-      fail-fast: false
-      matrix:
-        path:
-          - dev
-          - stage
-          - prod
+#############################################################################
+# Builds
+# if building more than one artifact clone this and change the name 
+# and path below, add the job to the dev_webapp or dev_func "Needs"
+#############################################################################
 
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
+  build_artifact:
+      uses: EaglebrookAdvisors/${{ env.project_name }}/.github/workflows/build-artifact.yml@main
+      with:
+        artifact-name:  ${{ web_app_1 }} #put in the functions or web app names you want to publish
+        path: ${{ web_app_1_artifact_path }} # and path to it
+      secrets: inherit
 
-      - name: Log in with Azure
-        uses: azure/login@v1
-        with:
-          creds: '${{ secrets.AZURE_CREDENTIALS }}'
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: 1.0.9
+#############################################################################
+# TERRAFORM PLAN
+#############################################################################
+  terraform_plan:
+      uses: EaglebrookAdvisors/${{ env.project_name }}/.github/workflows/terrafrom-plan.yml@main
+      with:
+        artifact-name:  ${{ web_app_1 }} #put in the functions or web app names you want to publish
+        path: ${{ web_app_1_artifact_path }} # and path to it
+      secrets: inherit
 
-      - name: Initialize Terraform
-        run: |
-          cd terraform/${{ matrix.path }}
-          terraform init -input=false
-      - name: Plan Terraform
-        id: plan
-        continue-on-error: true
-        run: |
-          cd terraform/${{ matrix.path }}
-          terraform plan -no-color -out=plan.tfplan \
-          && terraform show -no-color plan.tfplan
-      # Store a file with the plan output and also modify it to have github diff color formatting.
-      # Sed is taking all lines that begin with one or more spaces followed by a `+` or `-`.
-      # It stores the amount of spaces in `\1` and the +/- in `\2`.
-      # Then replace that portion of the line with `\2\1` (+/- followed by the number of matched spaces).
-      - run: echo '${{ steps.plan.outputs.stdout || steps.plan.outputs.stderr }}' | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt
+ 
 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: ${{ matrix.path }}
-          path: plan.txt
+#############################################################################
+# DEV DEPLOY
+# below is a setup for the first web app and fubction any more and you need 
+# to copy and paste the job and change the 1s to 2s and 3s etc
+#############################################################################
 
-  post_plan:
-    name: Post Plan
-    needs: [plan]
-    runs-on: ubuntu-20.04
-
-    steps:
-      # Downloads all plan.txt artifacts and stores them in folders based on artifact name
-      - name: Download Plan Outputs
-        uses: actions/download-artifact@v2
-
-      # Workaround for multi-line outputs https://trstringer.com/github-actions-multiline-strings/#option-2---environment-variable
-      - name: Put Plan Files in ENV Vars
-        run: |
-          DEV_PLAN=$(cat dev/plan.txt)
-          echo "DEV_PLAN<<EOF" >> $GITHUB_ENV
-          echo "$DEV_PLAN" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          STAGE_PLAN=$(cat stage/plan.txt)
-          echo "STAGE_PLAN<<EOF" >> $GITHUB_ENV
-          echo "$STAGE_PLAN" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-          PROD_PLAN=$(cat prod/plan.txt)
-          echo "PROD_PLAN<<EOF" >> $GITHUB_ENV
-          echo "$PROD_PLAN" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
-      - name: Post Plan to GitHub PR
-        uses: mshick/add-pr-comment@v1
-        with:
-          allow-repeats: true
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          repo-token-user-login: 'github-actions[bot]'
-          message: |
-            ## DEV
-            ```diff
-            ${{ env.DEV_PLAN }}
-            ```
-            -----
-            ## STAGE
-            ```diff
-            ${{ env.STAGE_PLAN }}
-            ```
-            -----
-            ## PROD
-            ```diff
-            ${{ env.PROD_PLAN }}
-            ```
-            -----
-            Merge to main to apply all of the above
-
-      
   dev:
-    name: Builds Dev Environment and deploys application
-    needs: build
+    name: Deploy Dev artifacts to azure
+    needs: [build_artifact, terraform_plan]
+    env:
+      environment: dev
     runs-on: ubuntu-latest
-    environment:
-      name: dev
-      url: ${{ steps.deploy_staging.outputs.webapp-url }}
     steps:
-      - uses: actions/checkout@v2 
+      - uses: actions/checkout@v2
       - name: Log in with Azure
         uses: azure/login@v1
         with:
           creds: '${{ secrets.AZURE_CREDENTIALS_SP_DEV }}'
-          
-        # Push to dev Azure web apps  
-      # - name: Deploy Portal.Server to Container 
-      #   if: ${{ env.config-level != 'Release' }}
-      #   uses: azure/webapps-deploy@v2
-      #   with:
-      #     app-name: ${{ env.server-azure-app-name }} 
-      #     publish-profile: ${{ secrets.SERVER_PORTAL_PUBLISH_PROFILE  }} 
-      #     package: publish/Portal.Server
-          
-      # - name: Deploy Portal.Staff to Container 
-      #   if: ${{ env.config-level != 'Release' }}
-      #   uses: azure/webapps-deploy@v2
-      #   with:
-      #     app-name: ${{ env.staff-azure-app-name }}
-      #     publish-profile: ${{ secrets.STAFF_PORTAL_PUBLISH_PROFILE  }} 
-      #     package: publish/Portal.Staff
-    
-  qa:
-    needs: dev
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2 
-      - uses: azure/login@v1
-        with:
-          creds: '${{ secrets.AZURE_CREDENTIALS_SP_DEV }}'
-          
-        # Push to dev Azure web apps  
-      - name: Deploy Portal.Server to Container 
-        if: ${{ env.config-level != 'Release' }}
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.server-azure-app-name }} 
-          publish-profile: ${{ secrets.SERVER_PORTAL_PUBLISH_PROFILE  }} 
-          package: publish/Portal.Server
-          
-      - name: Deploy Portal.Staff to Container 
-        if: ${{ env.config-level != 'Release' }}
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.staff-azure-app-name }}
-          publish-profile: ${{ secrets.STAFF_PORTAL_PUBLISH_PROFILE  }} 
-          package: publish/Portal.Staff
-  
-  uat:
-    needs: qa
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2 
-      - uses: azure/login@v1
-        with:
-          creds: '${{ secrets.AZURE_CREDENTIALS_SP_DEV }}'
-          
-        # Push to dev Azure web apps  
-      - name: Deploy Portal.Server to Container 
-        if: ${{ env.config-level != 'Release' }}
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.server-azure-app-name }} 
-          publish-profile: ${{ secrets.SERVER_PORTAL_PUBLISH_PROFILE  }} 
-          package: publish/Portal.Server
-          
-      - name: Deploy Portal.Staff to Container 
-        if: ${{ env.config-level != 'Release' }}
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.staff-azure-app-name }}
-          publish-profile: ${{ secrets.STAFF_PORTAL_PUBLISH_PROFILE  }} 
-          package: publish/Portal.Staff
+      
+      - name: Apply Terraform
+        id: apply
+        continue-on-error: true
+        run: |
+          cd terraform/dev
+          terraform apply \
+            -input=false \
+            -no-color \
+            tfplan   
 
+      - name: 'deploy Web App: ${{ web_app_1 }}'
+        if: $web_app_1 != ''
+        uses: azure/webapps-deploy@v2
+        env:
+          web_app_name1: $web_app_1-app-$environment-$location-001
+        with:
+          app-name: ${{ env.web_app_name1 }}  
+          package: publish/${{ web_app_1 }} 
+
+      - name: 'Deploy Function: ${{ function_1 }}'
+        uses: Azure/functions-action@v1
+        id: fa-orchestrator
+        env:
+          func_name1: $web_app_1-app-$environment-$location-001
+        with:
+          app-name: '${{ env.func_name1 }}'
+          slot-name: 'STAGING'
+          package: publish/${{ function_1 }}
+
+#############################################################################
+# QA DEPLOY
+#############################################################################
+  qa:
+    name: Deploy QA artifacts to azure
+    needs: [dev, terraform_plan]
+    env:
+      environment: qa
+    runs-on: ubuntu-latest
+
+#############################################################################
+# UAT DEPLOY
+#############################################################################
+  uat:
+    name: Deploy UAT artifacts to azure
+    needs: [qa, terraform_plan]
+    env:
+      environment: uat
+    runs-on: ubuntu-latest
+#############################################################################
+# PROD DEPLOY
+#############################################################################
   prod:
-    needs: uat
+    name: Deploy PROD artifacts to azure
+    needs: [uat, terraform_plan]
+    env:
+      environment: prod
+    runs-on: ubuntu-latest
+    
+#############################################################################
+# Debug off
+#############################################################################
+  debug_off:
+    if: env.debug  == true && always()
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2 
-      - uses: azure/login@v1
-        with:
-          creds: '${{ secrets.AZURE_CREDENTIALS_SP_DEV }}'
-          
-        # Push to dev Azure web apps  
-      - name: Deploy Portal.Server to Container 
-        if: ${{ env.config-level != 'Release' }}
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.server-azure-app-name }} 
-          publish-profile: ${{ secrets.SERVER_PORTAL_PUBLISH_PROFILE  }} 
-          package: publish/Portal.Server
-          
-      - name: Deploy Portal.Staff to Container 
-        if: ${{ env.config-level != 'Release' }}
-        uses: azure/webapps-deploy@v2
-        with:
-          app-name: ${{ env.staff-azure-app-name }}
-          publish-profile: ${{ secrets.STAFF_PORTAL_PUBLISH_PROFILE  }} 
-          package: publish/Portal.Staff
+      - name: Turning off debug
+        run: |
+          gh secret set ACTIONS_RUNNER_DEBUG  --body "false" --repo "RossAFlood/${{ inputs.project_name }}"
