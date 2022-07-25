@@ -10,9 +10,10 @@ on:
   workflow_dispatch:
     inputs: 
       debug:
+        type: boolean
         description: 'envoke debug mode'
         required: true
-        default: 'false'
+        default: false
 
 env:
   project_name: eba-dflt
