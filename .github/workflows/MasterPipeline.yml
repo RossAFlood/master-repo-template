@@ -45,7 +45,7 @@ jobs:
     steps:
       - name: turning on debug
         run: |
-          gh secret set ACTIONS_RUNNER_DEBUG  --body "true" --repo "RossAFlood/${{ inputs.project_name }}"
+          gh secret set ACTIONS_RUNNER_DEBUG  --body "true" --repo "EaglebrookAdvisors/${{ inputs.project_name }}"
 
 #############################################################################
 # Builds
@@ -159,4 +159,4 @@ jobs:
     steps:
       - name: Turning off debug
         run: |
-          gh secret set ACTIONS_RUNNER_DEBUG  --body "false" --repo "RossAFlood/${{ inputs.project_name }}"
+          gh secret set ACTIONS_RUNNER_DEBUG  --body "false" --repo "EaglebrookAdvisors/${{ inputs.project_name }}"
