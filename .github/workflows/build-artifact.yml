@@ -1,0 +1,66 @@
+name: Builds Artifacts
+
+# Controls when the workflow will run
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        required: true
+        type: string
+      path:
+        required: true
+        type: string
+    outputs:
+      success:
+        description: "Job Success or failure"
+        value: ${{ jobs.build.outputs.success }}
+        
+env:
+  third-party-nuget-feed: https://pkgs.dev.azure.com/${{ env.repo_owner }}/_packaging/third.party/nuget/v3/index.json
+  vendor-test-nuget-feed: https://pkgs.dev.azure.com/${{ env.repo_owner }}/EagleOne/_packaging/vendor-test-feed/nuget/v3/index.json
+  github-nuget-feed: https://nuget.pkg.github.com/${{ env.repo_owner }}/index.json
+  dotnet-version: 6.0.x
+  config-level: Debug
+
+jobs:
+  build:
+    name: 'Build and Test'
+    runs-on: ubuntu-latest
+    outputs:
+      success: ${{ steps.outcome.outputs.success }}
+    steps:
+      - name: 'Checkout GitHub Action'
+        uses: actions/checkout@v2
+        
+      - name: Setup DotNet ${{ env.DOTNET_VERSION }} Environment
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}  
+          
+      # Authenticate with Eaglebrook NuGet Feed
+      - name: Authenticate Nuget Packages
+        id: auth-packages
+        run: >
+          dotnet nuget add source --username ${{secrets.GH_SP_USER_NAME}} --password "${{ secrets.GH_SP_PAT}}" 
+          --store-password-in-clear-text --name github "${{ env.github-nuget-feed }}"; 
+          
+      - name: Restore Dependencies
+        run: dotnet restore
+
+      - name: 'Build DotNet'
+        shell: bash
+        run: |
+          pushd './${{ env.path }}'
+          dotnet build --configuration ${{ env.config-level }} --output ../publish/${{ env.artifact-name }} --no-restore
+          popd  
+
+      - name: 'Upload artifact'
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.artifact-name }}
+          path: publish/${{ env.artifact-name }}
+      
+      - id: Success
+        run: echo "::set-output name=success::true"
+
+  

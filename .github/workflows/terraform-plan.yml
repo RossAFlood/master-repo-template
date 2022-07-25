@@ -1,0 +1,104 @@
+name: Terrafrom Plan
+
+# Controls when the workflow will run
+on:
+  workflow_call:
+    inputs:
+      artifact-name:
+        required: true
+        type: string
+      path:
+        required: true
+        type: string
+    outputs:
+      success:
+        description: "Job Success or failure"
+        value: ${{ jobs.build.outputs.success }}
+
+jobs:
+  Terraform:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    outputs:
+      success: ${{ steps.outcome.outputs.success }}
+    strategy:
+      fail-fast: false
+      matrix:
+        path:
+          - dev
+          # - qa
+          # - uat
+          # - prod
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Log in with Azure
+        uses: azure/login@v1
+        with:
+          creds: '${{ secrets.AZURE_CREDENTIALS_SP_DEV }}'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.9
+
+      - name: Initialize Terraform
+        run: |
+          cd terraform/${{ matrix.path }}
+          terraform init -input=false
+
+      - name: Plan Terraform
+        id: plan
+        continue-on-error: true
+        run: |
+          cd terraform/${{ matrix.path }}
+          terraform plan -no-color -out=plan.tfplan \
+          && terraform show -no-color plan.tfplan
+      
+      - name: Post Plan Failure
+        if: steps.plan.outcome == 'failure'
+        uses: mshick/add-pr-comment@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'gh_service_account'
+          message: |
+            Plan failed for **${{ matrix.path }}**:
+
+            ```
+            ${{ steps.plan.outputs.stderr }}
+            ```            
+
+      - name: Reformat Plan
+        run: |
+          echo '${{ steps.plan.outputs.stdout || steps.plan.outputs.stderr }}' \
+          | sed -E 's/^([[:space:]]+)([-+])/\2\1/g' > plan.txt          
+
+      - name: Put Plan in Env Var
+        run: |
+          PLAN=$(cat plan.txt)
+          echo "PLAN<<EOF" >> $GITHUB_ENV
+          echo "$PLAN" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV          
+
+      - name: Post Plan to GitHub PR
+        uses: mshick/add-pr-comment@v1
+        with:
+          allow-repeats: true
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'gh_service_account'
+          message: |
+            ## ${{ matrix.path }} plan
+            ```diff
+            ${{ env.PLAN }}
+            ```          
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.path }}
+          path: plan.txt
+
+      
+      - id: Success
+        run: echo "::set-output name=success::true"
+
+  
